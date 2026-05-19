@@ -1,0 +1,1 @@
+export const MODEL_OPTIONS = ["Dell", "MSI", "Lenovo", "mac"];

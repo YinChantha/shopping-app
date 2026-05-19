@@ -155,8 +155,6 @@ export async function createProductApi(payload: {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || "Create failed");
-
   return data;
 }
 
@@ -194,8 +192,6 @@ export async function updateProductApi(
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || "Update failed");
-
   return data;
 }
 
@@ -206,10 +202,5 @@ export async function deleteProductApi(id: string) {
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(data?.message || "Delete failed");
-  }
-
   return data;
 }

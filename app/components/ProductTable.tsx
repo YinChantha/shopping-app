@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Product } from "../share/api";
+import Loading from "./Loading";
 
  export const HEADER = ["Image", "Name", "Model", "Price", "Stock", "Status", "Actions"];
 
@@ -40,7 +41,7 @@ export default function ProductTable({
           {loading ? (
             <tr>
               <td className="px-4 py-4" colSpan={6}>
-                Loading...
+                <Loading />
               </td>
             </tr>
           ) : items.length === 0 ? (

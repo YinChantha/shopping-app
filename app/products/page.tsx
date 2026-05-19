@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import {  useEffect, useState } from "react";
 import ProductTable from "../components/ProductTable";
 import Pagination from "../components/Pagination";
-
 import {
   createProductApi,
   deleteProductApi,
@@ -13,9 +11,11 @@ import {
   ProductFormData,
   ProductMeta,
   updateProductApi,
-  getToken,
 } from "../share/api";
 import { useRouter } from "next/navigation";
+import { requireAuth } from "../share/heper";
+import ProductForm from "../components/ProductForm";
+import { MODEL_OPTIONS } from "../share/type";
 
 const emptyMeta: ProductMeta = {
   total: 0,
@@ -24,7 +24,7 @@ const emptyMeta: ProductMeta = {
   totalPages: 1,
   hasNext: false,
   hasPrev: false,
-};
+}; // this is initail when page load, before fetch data from api, to avoid undefined error for meta
 
 export default function ProductsPage() {
  const router = useRouter();
@@ -61,6 +61,12 @@ export default function ProductsPage() {
     setLoading(false);
   };
 
+  // when initail load if no token
+  useEffect(() => {
+    requireAuth(router); // this will check token in localStorage, if no token it will redirect to login page
+  }, []);
+
+  // for pagination, filter
   useEffect(() => {
     loadProducts().catch((err) => setError(err.message));
   }, [page, limit]);
@@ -81,8 +87,6 @@ export default function ProductsPage() {
   };
 
   const handleSubmit = async (form: ProductFormData) => {
-    if (!getToken()) return alert("Please login first");
-
     setSaving(true);
     setError("");
 
@@ -111,7 +115,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!getToken()) return alert("Please login first");
     if (!confirm("Are you sure you want to delete?")) return;
 
     setError("");
@@ -131,13 +134,11 @@ export default function ProductsPage() {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    // or localStorage.clear() if you want everything removed
-
     router.push("/login");
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-16 ">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Products</h1>
@@ -162,6 +163,7 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      {/* search  */}
       <div className="rounded-2xl bg-white p-4 shadow">
         <div className="grid gap-3 md:grid-cols-4">
           <input
@@ -170,12 +172,25 @@ export default function ProductsPage() {
             placeholder="Search by name"
             className="rounded-lg border px-3 py-2"
           />
-          <input
+
+          <select
+            value={modelFilter}
+            onChange={(e) => setModelFilter(e.target.value)}
+            className="rounded-lg border px-3 py-2"
+          >
+            <option value="">All Models</option>
+            {MODEL_OPTIONS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+          {/* <input
             value={modelFilter}
             onChange={(e) => setModelFilter(e.target.value)}
             placeholder="Search by model"
             className="rounded-lg border px-3 py-2"
-          />
+          /> */}
           <select
             value={activeFilter}
             onChange={(e) => setActiveFilter(e.target.value)}
@@ -192,8 +207,30 @@ export default function ProductsPage() {
             Search
           </button>
         </div>
+      </div>
 
-        <div className="mt-4 flex items-center gap-3">
+      <ProductForm
+        open={formOpen}
+        editingProduct={editingProduct}
+        onClose={closeForm}
+        onSubmit={handleSubmit}
+        saving={saving}
+      />
+
+      {error && (
+        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      <ProductTable
+        items={items}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={handleDelete}
+      />
+
+       <div className="mt-4 flex items-center gap-3">
           <span className="text-sm text-gray-600">Limit:</span>
           <select
             value={limit}
@@ -208,28 +245,6 @@ export default function ProductsPage() {
             <option value={20}>20</option>
           </select>
         </div>
-      </div>
-
-      {/* <ProductForm
-        open={formOpen}
-        editingProduct={editingProduct}
-        onClose={closeForm}
-        onSubmit={handleSubmit}
-        saving={saving}
-      /> */}
-
-      {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
-
-      <ProductTable
-        items={items}
-        loading={loading}
-        onEdit={openEdit}
-        onDelete={handleDelete}
-      />
 
       <Pagination
         meta={meta}
